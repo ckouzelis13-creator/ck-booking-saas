@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Attributes\Fillable; // Χρειαζόμαστε αυτό το import
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Model; // Χρειαζόμαστε αυτό το import
 
-#[Fillable(['name', 'slug', 'phone', 'user_id'])] // Εδώ επιτρέπουμε τα πεδία
+#[Fillable(['name', 'slug', 'phone', 'user_id', 'primary_color', 'accent_color', 'logo_path'])] // Εδώ επιτρέπουμε τα πεδία
 class Shop extends Model
 {
     public function user()
@@ -22,5 +22,4 @@ class Shop extends Model
     {
         return $this->hasMany(Employee::class);
     }
-
 }
