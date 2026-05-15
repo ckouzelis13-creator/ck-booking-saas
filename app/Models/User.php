@@ -2,7 +2,10 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Filament\Models\Contracts\HasTenants; // <--- Σημαντικό Import
+use Filament\Panel; // <--- Σημαντικό Import
+use Illuminate\Database\Eloquent\Model; // <--- Σημαντικό Import
+use Illuminate\Support\Collection; // <--- Σημαντικό Import
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -14,17 +17,28 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 
 #[Fillable(['name', 'email', 'password'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
-class User extends Authenticatable
+class User extends Authenticatable implements HasTenants // <--- Πρόσθεσε το "implements HasTenants"
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, TwoFactorAuthenticatable;
 
     /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
+     * 1. Επιστρέφει τα μαγαζιά στα οποία έχει πρόσβαση ο χρήστης
      */
-    protected function casts(): array
+    public function getTenants(Panel $panel): Collection
+    {
+        return $this->shops;
+    }
+
+    /**
+     * 2. Ελέγχει αν ο χρήστης μπορεί να μπει σε ένα συγκεκριμένο μαγαζί
+     */
+    public function canAccessTenant(Model $tenant): bool
+    {
+        return $this->shops->contains($tenant);
+    }
+
+    public function casts(): array
     {
         return [
             'email_verified_at' => 'datetime',
@@ -32,9 +46,6 @@ class User extends Authenticatable
         ];
     }
 
-    /**
-     * Get the user's initials
-     */
     public function initials(): string
     {
         return Str::of($this->name)
@@ -42,5 +53,10 @@ class User extends Authenticatable
             ->take(2)
             ->map(fn ($word) => Str::substr($word, 0, 1))
             ->implode('');
+    }
+
+    public function shops()
+    {
+        return $this->hasMany(Shop::class);
     }
 }
